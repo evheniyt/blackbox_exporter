@@ -196,6 +196,7 @@ type Module struct {
 	ICMP    ICMPProbe     `yaml:"icmp,omitempty"`
 	DNS     DNSProbe      `yaml:"dns,omitempty"`
 	GRPC    GRPCProbe     `yaml:"grpc,omitempty"`
+	CHROME  CHROMEProbe   `yaml:"chrome,omitempty"`
 }
 
 type HTTPProbe struct {
@@ -278,6 +279,11 @@ type DNSRRValidator struct {
 	FailIfAllMatchRegexp    []string `yaml:"fail_if_all_match_regexp,omitempty"`
 	FailIfNotMatchesRegexp  []string `yaml:"fail_if_not_matches_regexp,omitempty"`
 	FailIfNoneMatchesRegexp []string `yaml:"fail_if_none_matches_regexp,omitempty"`
+}
+
+type CHROMEProbe struct {
+	TextSelector            string   `yaml:"text_selector,omitempty"`
+	FailIfTextMatchesRegexp []Regexp `yaml:"fail_if_text_matches_regexp,omitempty"`
 }
 
 // UnmarshalYAML implements the yaml.Unmarshaler interface.
