@@ -42,3 +42,9 @@ modules:
       - expect: "^:[^ ]+ 001"
   icmp:
     prober: icmp
+  chrome:
+    prober: chrome
+    chrome:
+      text_selector: "block-header_root__24-io"
+      fail_if_text_matches_regexp:
+        - "an error occurred"

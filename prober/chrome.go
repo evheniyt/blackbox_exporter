@@ -21,12 +21,13 @@ import (
 	"github.com/prometheus/blackbox_exporter/config"
 	"github.com/prometheus/client_golang/prometheus"
 	"net/url"
+	"strings"
 )
 
 func matchRegex(body string, chromeConfig config.CHROMEProbe, logger log.Logger) bool {
 	for _, expression := range chromeConfig.FailIfTextMatchesRegexp {
 		if expression.Regexp.MatchString(body) {
-			level.Error(logger).Log("msg", "Body matched regular expression", "regexp", expression)
+			level.Error(logger).Log("msg", "Text matched regular expression", "regexp", expression)
 			return false
 		}
 	}
@@ -57,9 +58,13 @@ func CHROMEProbe(ctx context.Context, target string, module config.Module, regis
 		chromedp.Navigate(targetURL.String()),
 		chromedp.Text(chromeConfig.TextSelector, &res, chromedp.NodeVisible),
 	)
+	res = strings.ToLower(res)
 	if err != nil {
 		level.Error(logger).Log("msg", "Could not run Chrome", "err", err)
+		return false
 	}
+
+	level.Info(logger).Log("msg", "Found", "text", res, "selector", chromeConfig.TextSelector)
 
 	if len(chromeConfig.FailIfTextMatchesRegexp) > 0 {
 		success = matchRegex(res, chromeConfig, logger)
@@ -69,8 +74,6 @@ func CHROMEProbe(ctx context.Context, target string, module config.Module, regis
 			probeFailedDueToRegex.Set(1)
 		}
 	}
-
-	level.Info(logger).Log("msg", "")
 
 	return
 }
