@@ -40,8 +40,13 @@ func CHROMEProbe(ctx context.Context, target string, module config.Module, regis
 			Name: "probe_failed_due_to_regex",
 			Help: "Indicates if probe failed due to regex",
 		})
+		probeFailedDueToMissingSelector = prometheus.NewGauge(prometheus.GaugeOpts{
+			Name: "probe_failed_due_to_missing_selector",
+			Help: "Indicates that selector doesn't became visible",
+		})
 	)
 	registry.MustRegister(probeFailedDueToRegex)
+	registry.MustRegister(probeFailedDueToMissingSelector)
 
 	chromeConfig := module.CHROME
 
@@ -53,26 +58,39 @@ func CHROMEProbe(ctx context.Context, target string, module config.Module, regis
 
 	chromeCtx, cancel := chromedp.NewContext(ctx)
 	defer cancel()
-	var res string
-	err = chromedp.Run(chromeCtx,
-		chromedp.Navigate(targetURL.String()),
-		chromedp.Text(chromeConfig.TextSelector, &res, chromedp.NodeVisible),
-	)
-	res = strings.ToLower(res)
-	if err != nil {
+
+	if err := chromedp.Run(chromeCtx, chromedp.Navigate(targetURL.String())); err != nil {
 		level.Error(logger).Log("msg", "Could not run Chrome", "err", err)
 		return false
 	}
 
-	level.Info(logger).Log("msg", "Found", "text", res, "selector", chromeConfig.TextSelector)
-
-	if len(chromeConfig.FailIfTextMatchesRegexp) > 0 {
-		success = matchRegex(res, chromeConfig, logger)
-		if success {
-			probeFailedDueToRegex.Set(0)
-		} else {
-			probeFailedDueToRegex.Set(1)
+	if chromeConfig.TextSelector != "" {
+		var res string
+		if err = chromedp.Run(chromeCtx, chromedp.Text(chromeConfig.TextSelector, &res, chromedp.NodeVisible)); err != nil {
+			level.Error(logger).Log("msg", "Failed to get text by selector", "selector", chromeConfig.TextSelector, "err", err)
+			return false
 		}
+		res = strings.ToLower(res)
+		level.Info(logger).Log("msg", "Found", "text", res, "selector", chromeConfig.TextSelector)
+
+		if len(chromeConfig.FailIfTextMatchesRegexp) > 0 {
+			success = matchRegex(res, chromeConfig, logger)
+			if success {
+				probeFailedDueToRegex.Set(0)
+			} else {
+				probeFailedDueToRegex.Set(1)
+			}
+		}
+	}
+
+	if chromeConfig.WaitVisibleSelector != "" {
+		if err = chromedp.Run(chromeCtx, chromedp.WaitVisible(chromeConfig.WaitVisibleSelector)); err != nil {
+			level.Error(logger).Log("msg", "Failed on waiting for selector to became visible", "selector", chromeConfig.WaitVisibleSelector, "err", err)
+			probeFailedDueToMissingSelector.Set(1)
+			return false
+		}
+		probeFailedDueToMissingSelector.Set(0)
+		success = true
 	}
 
 	return

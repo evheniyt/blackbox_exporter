@@ -3,7 +3,7 @@ module github.com/prometheus/blackbox_exporter
 require (
 	github.com/alecthomas/units v0.0.0-20211218093645-b94a6e3cc137
 	github.com/andybalholm/brotli v1.0.4
-	github.com/chromedp/chromedp v0.7.7
+	github.com/chromedp/chromedp v0.8.0
 	github.com/go-kit/log v0.2.0
 	github.com/miekg/dns v1.1.45
 	github.com/pkg/errors v0.9.1

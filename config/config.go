@@ -283,6 +283,7 @@ type DNSRRValidator struct {
 
 type CHROMEProbe struct {
 	TextSelector            string   `yaml:"text_selector,omitempty"`
+	WaitVisibleSelector     string   `yaml:"wait_visible_selector,omitempty"`
 	FailIfTextMatchesRegexp []Regexp `yaml:"fail_if_text_matches_regexp,omitempty"`
 }
 

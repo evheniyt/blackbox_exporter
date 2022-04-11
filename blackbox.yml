@@ -49,6 +49,7 @@ modules:
   chrome:
     prober: chrome
     chrome:
-      text_selector: "block-header_root__24-io"
-      fail_if_text_matches_regexp:
-        - "an error occurred"
+#      text_selector: "#root > main > div.info-block_root__Sb7RK > div > div > div > div > section:nth-child(1) > h1 > span"
+#      fail_if_text_matches_regexp:
+#        - "an error occurred"
+      wait_visible_selector: "#root > main > div.product-list-center-block_root__VfSL8"
